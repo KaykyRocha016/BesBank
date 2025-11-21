@@ -1,0 +1,40 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_LEFT_RIGHT()
+
+Person(user, "Usuário", "Cliente que cria contas, deposita, saca e consulta saldo/extrato.")
+
+System_Boundary(bankingSystem, "Sistema de Contas Bancárias") {
+
+    Container(writeApi, "Write API", "REST/HTTP", "Recebe comandos do usuário: criar conta, depositar, sacar.")
+
+    Container(commandHandler, "Command Handler", "Aplicação / Serviço", "Valida comandos, carrega agregados, aplica regras de negócio, persiste eventos no Event Store e publica eventos no Broker.")
+
+    Container(writeDomain, "Write Domain", "DDD / Domain Model", "Agregados, invariantes, regras de negócio e lógica de aplicação de eventos.")
+
+    Container(eventStore, "Event Store", "Armazena todos os eventos como fonte de verdade e permite reconstruir agregados.")
+
+    Container(readModelUpdater, "Read Model Updater", "Aplicação / Worker", "Consome eventos do Broker e atualiza projeções no banco de leitura.")
+
+    Container(readDatabase, "Read Database", "DB otimizado para leitura (MongoDB / ElasticSearch / PostgreSQL)", "Armazena projeções: saldo, extrato, visão agregada.")
+
+    Container(readApi, "Read API", "REST/HTTP", "Atende consultas rápidas do usuário: saldo e extrato.")
+}
+
+System_Ext(broker, "Event Broker", "Kafka / RabbitMQ", "Recebe eventos do Write Model e os distribui para os consumidores.")
+
+Rel(user, writeApi, "Envia comandos")
+Rel(writeApi, commandHandler, "Encaminha comandos para processamento")
+
+Rel(commandHandler, writeDomain, "Carrega agregados e aplica comandos")
+Rel(writeDomain, eventStore, "Armazena eventos")
+Rel(commandHandler, broker, "Publica eventos confirmados")
+
+Rel(broker, readModelUpdater, "Entrega eventos para projeção")
+Rel(readModelUpdater, readDatabase, "Atualiza projeções")
+
+Rel(user, readApi, "Realiza consultas")
+Rel(readApi, readDatabase, "Lê projeções")
+
+@enduml
