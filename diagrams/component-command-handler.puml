@@ -1,0 +1,61 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+LAYOUT_LEFT_RIGHT()
+title C3 - Sistema Bancário (Fluxo Completo CQRS + Event Sourcing)
+
+Person(user, "Usuário", "Cliente")
+
+Container_Boundary(appBoundary, "Banking Application") {
+
+    ' --- LADO DA ESCRITA (WRITE SIDE) ---
+    Component(writeController, "Write Controller", "REST API", "Recebe POST /contas/depositar, /sacar")
+
+    Component(commandHandler, "Command Handler", "Domain Service", "Orquestra o fluxo: Carrega Agregado -> Executa -> Persiste")
+
+    Component(aggregate, "Account Aggregate", "Domain Object", "Lógica de Negócio: processa DepositarDinheiroCommand / SacarDinheiroCommand")
+
+    Component(eventRepo, "Event Store Repository", "Repository", "Grava e lê stream de eventos")
+
+    Component(publisher, "Event Publisher", "Infra", "Publica eventos no Broker")
+
+    ' --- LADO DA LEITURA (READ SIDE) ---
+    Component(listener, "Event Listener", "Worker/Consumer", "Escuta tópicos de eventos")
+
+    Component(projector, "Balance Projector", "Logic", "Transforma eventos (DinheiroDepositado) em estado (Saldo += X)")
+
+    Component(readRepo, "Read Repository", "Repository", "Atualiza tabela de projeção")
+
+    Component(readController, "Read Controller", "REST API", "Atende GET /saldo")
+
+}
+
+' --- SISTEMAS EXTERNOS ---
+Container(eventStoreDb, "Event Store DB", "Database", "Append-only logs")
+System_Ext(broker, "Event Broker", "Kafka / RabbitMQ", "Assincronismo")
+Container(readDb, "Read DB", "SQL / NoSQL", "Dados projetados para leitura rápida")
+
+' --- RELAÇÕES ---
+
+' Fluxo de Escrita
+Rel(user, writeController, "1. Envia Comando")
+Rel(writeController, commandHandler, "2. Despacha Comando")
+Rel(commandHandler, eventRepo, "3. Reconstrói Agregado (Load)")
+Rel(commandHandler, aggregate, "4. Executa Lógica")
+Rel(aggregate, eventRepo, "5. Persiste Novos Eventos")
+Rel(eventRepo, eventStoreDb, "INSERT Eventos")
+Rel(commandHandler, publisher, "6. Notifica Evento")
+Rel(publisher, broker, "7. Publica: DinheiroDepositadoEvent")
+
+' Fluxo de Leitura
+Rel(broker, listener, "8. Consome Evento")
+Rel(listener, projector, "9. Processa Projeção")
+Rel(projector, readRepo, "10. Salva Estado Atual")
+Rel(readRepo, readDb, "UPDATE Saldo")
+
+' Consulta
+Rel(user, readController, "11. Consulta Saldo")
+Rel(readController, readRepo, "12. Lê Estado")
+Rel(readRepo, readDb, "SELECT * FROM Contas")
+
+@enduml
