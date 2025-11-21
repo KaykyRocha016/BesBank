@@ -3,20 +3,14 @@
 
 LAYOUT_LEFT_RIGHT()
 
-Person(user, "Usuário", "Cliente que cria contas, deposita e saca.")
+Person(user, "Usuário", "Cliente que cria contas, deposita, saca e consulta saldo/extrato.")
 
-System(system, "Sistema de Contas Bancárias (Write Model)", "Recebe comandos, aplica regras de negócio e gera eventos.")
+System(bankingSystem, "Sistema de Contas Bancárias", "Sistema que recebe comandos do usuário, gera eventos, processa projeções e fornece consultas.")
 
-System_Ext(broker, "Event Broker", "Distribui eventos para serviços interessados.")
+System_Ext(eventBroker, "Event Broker", "Kafka / RabbitMQ", "Distribui eventos gerados pelo sistema para outros componentes consumidores.")
 
-System_Ext(store, "Event Store", "Armazena eventos como fonte de verdade (Event Sourcing).")
-
-System(readModel, "Serviço de Consulta (Read Model)", "Mantém projeções para consultas rápidas (CQRS).")
-
-Rel(user, system, "Cria conta, deposita, saca (Comandos)")
-Rel(system, broker, "Publica eventos de conta")
-Rel(system, store, "Armazena eventos (append-only)")
-Rel(broker, readModel, "Envia eventos para atualização de projeções")
-Rel(user, readModel, "Consulta saldo e extratos")
+Rel(user, bankingSystem, "Envia comandos e realiza consultas", "HTTP/REST")
+Rel(bankingSystem, eventBroker, "Publica eventos confirmados")
+Rel(eventBroker, bankingSystem, "Retorna eventos para atualização de projeções")
 
 @enduml
