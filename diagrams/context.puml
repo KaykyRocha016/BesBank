@@ -1,0 +1,22 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+LAYOUT_LEFT_RIGHT()
+
+Person(user, "Usuário", "Cliente que cria contas, deposita e saca.")
+
+System(system, "Sistema de Contas Bancárias (Write Model)", "Recebe comandos, aplica regras de negócio e gera eventos.")
+
+System_Ext(broker, "Event Broker", "Distribui eventos para serviços interessados.")
+
+System_Ext(store, "Event Store", "Armazena eventos como fonte de verdade (Event Sourcing).")
+
+System(readModel, "Serviço de Consulta (Read Model)", "Mantém projeções para consultas rápidas (CQRS).")
+
+Rel(user, system, "Cria conta, deposita, saca (Comandos)")
+Rel(system, broker, "Publica eventos de conta")
+Rel(system, store, "Armazena eventos (append-only)")
+Rel(broker, readModel, "Envia eventos para atualização de projeções")
+Rel(user, readModel, "Consulta saldo e extratos")
+
+@enduml
