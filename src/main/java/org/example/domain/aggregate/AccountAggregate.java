@@ -4,7 +4,7 @@ import org.example.domain.commands.DepositCommand;
 import org.example.domain.commands.WithdrawCommand;
 import org.example.domain.events.Event;
 import org.example.domain.events.MoneyDepositedEvent;
-import org.example.domain.events.withdrewMoneyEvent;
+import org.example.domain.events.WithdrawMoneyEvent;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -23,7 +23,7 @@ public class AccountAggregate {
     public void apply(Event event) {
         if (event instanceof MoneyDepositedEvent e) {
             this.balance = this.balance.add(e.getAmount());
-        } else if (event instanceof withdrewMoneyEvent e) {
+        } else if (event instanceof WithdrawMoneyEvent e) {
             this.balance = this.balance.subtract(e.getAmount());
         }
     }
@@ -56,7 +56,7 @@ public class AccountAggregate {
         }
 
         // gera o evento
-        withdrewMoneyEvent event = new withdrewMoneyEvent(
+        WithdrawMoneyEvent event = new WithdrawMoneyEvent(
                 command.accountId(),
                 command.amount(),
                 Instant.now());

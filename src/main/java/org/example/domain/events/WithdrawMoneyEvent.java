@@ -5,9 +5,9 @@ import java.time.Instant;
 import java.util.UUID;
 
 // evento gerado após um saque bem-sucedido
-public class withdrewMoneyEvent extends Event{
+public class WithdrawMoneyEvent extends Event{
 
-    public withdrewMoneyEvent(UUID accountId, BigDecimal amount, Instant timestamp) {
+    public WithdrawMoneyEvent(UUID accountId, BigDecimal amount, Instant timestamp) {
         super(accountId, amount, timestamp);
     }
 }

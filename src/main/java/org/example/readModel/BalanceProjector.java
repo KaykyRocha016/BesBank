@@ -2,7 +2,7 @@ package org.example.readModel;
 
 import org.example.domain.events.Event;
 import org.example.domain.events.MoneyDepositedEvent;
-import org.example.domain.events.withdrewMoneyEvent;
+import org.example.domain.events.WithdrawMoneyEvent;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -21,7 +21,7 @@ public class BalanceProjector {
         if (event instanceof MoneyDepositedEvent e) {
             BigDecimal newBalance = currentBalance.add(e.getAmount());
             readDatabase.put(e.getAccountId(), newBalance);
-        } else if (event instanceof withdrewMoneyEvent e) {
+        } else if (event instanceof WithdrawMoneyEvent e) {
             BigDecimal newBalance = currentBalance.subtract(e.getAmount());
             readDatabase.put(e.getAccountId(), newBalance);
         }
