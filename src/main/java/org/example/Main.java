@@ -3,6 +3,7 @@ package org.example;
 import org.example.application.service.AccountCommandHandler;
 import org.example.domain.commands.DepositCommand;
 import org.example.domain.commands.WithdrawCommand;
+import org.example.domain.events.Event;
 import org.example.infrastructure.EventStore;
 import org.example.readModel.AccountBalanceProjection;
 import org.example.readModel.BalanceProjector;
@@ -34,7 +35,7 @@ public class Main {
             System.out.println("\n8. Consumindo Eventos do Broker (Listener)");
 
             // Simulação: o Event Store envia todos os eventos para o Projector
-            List<Object> allEvents = eventStore.getAllEvents();
+            List<Event> allEvents = eventStore.getAllEvents();
             allEvents.forEach(projector::project);
 
             System.out.println("--------------------------------------------------");

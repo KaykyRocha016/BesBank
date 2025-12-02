@@ -5,8 +5,9 @@ import java.time.Instant;
 import java.util.UUID;
 
 // evento após um depósito bem sucedido
-public record MoneyDepositedEvent(
-        UUID accountId,
-        BigDecimal amount,
-        Instant timestamp
-) {}
+public class MoneyDepositedEvent extends  Event {
+
+    public MoneyDepositedEvent(UUID accountId, BigDecimal amount, Instant timestamp) {
+        super(accountId, amount, timestamp);
+    }
+}
