@@ -1,0 +1,16 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+  datasource:
+    write:
+      url: jdbc:postgresql://localhost:5432/bank_write
+      username: postgres
+      password: password
+      driver-class-name: org.postgresql.Driver
+    read:
+      url: jdbc:postgresql://localhost:5432/bank_read
+      username: postgres
+      password: password
+      driver-class-name: org.postgresql.Driver
