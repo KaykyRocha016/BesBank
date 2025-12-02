@@ -5,7 +5,7 @@ import org.example.domain.commands.DepositCommand;
 import org.example.domain.commands.WithdrawCommand;
 import org.example.domain.events.Event;
 import org.example.domain.events.MoneyDepositedEvent;
-import org.example.domain.events.withdrewMoneyEvent;
+import org.example.domain.events.WithdrawMoneyEvent;
 
 import java.math.BigDecimal;
 import java.time.Instant;
