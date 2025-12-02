@@ -1,5 +1,6 @@
 package org.example.domain.aggregate;
 
+import org.example.domain.commands.Command;
 import org.example.domain.commands.DepositCommand;
 import org.example.domain.commands.WithdrawCommand;
 import org.example.domain.events.Event;
@@ -21,24 +22,20 @@ public class AccountAggregate {
 
     // metodo para reconstruir o estado a partir dos eventos (Event Sourcing)
     public void apply(Event event) {
-        if (event instanceof MoneyDepositedEvent e) {
-            this.balance = this.balance.add(e.getAmount());
-        } else if (event instanceof withdrewMoneyEvent e) {
-            this.balance = this.balance.subtract(e.getAmount());
-        }
+        this.balance = this.balance.add(event.getAmount());
     }
 
     // lógica para lidar com o comando de Depósito
-    public List<Event> handle(DepositCommand command) {
+    public List<Event> handle(Command command) {
         //algum dos amigoões adicionar mais alguma lógica aqui tipo pra negativo
-        if (command.amount().compareTo(BigDecimal.ZERO) <= 0) {
+        if (command.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("O valor do depósito deve ser positivo.");
         }
 
         // gera o evento
         MoneyDepositedEvent event = new MoneyDepositedEvent(
-                command.accountId(),
-                command.amount(),
+                command.getAccountId(),
+                command.getAmount(),
                 Instant.now());
 
         // aplica o evento (atualiza o estado)
@@ -46,28 +43,6 @@ public class AccountAggregate {
 
         return List.of(event);
     }
-
-    // lógica para lidar com o comando de Saque
-    public List<Event> handle(WithdrawCommand command) {
-        // Validação de negócio: Não pode sacar mais do que o saldo
-        //algum dos amigoões adicionar mais alguma lógica aqui tipo pra negativo e coisas q achar necessario pls
-        if (command.amount().compareTo(balance) > 0) {
-            throw new IllegalStateException("Saldo insuficiente.");
-        }
-
-        // gera o evento
-        withdrewMoneyEvent event = new withdrewMoneyEvent(
-                command.accountId(),
-                command.amount(),
-                Instant.now());
-
-        // aplica o evento
-        apply(event);
-
-        return List.of(event);
-    }
-
-    // Getters para fins de demonstração
     public UUID getAccountId() { return accountId; }
     public BigDecimal getBalance() { return balance; }
 }

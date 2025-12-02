@@ -3,7 +3,9 @@ package org.example.domain.commands;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-public record DepositCommand(
-        UUID accountId,
-        BigDecimal amount
-) {}
+public class DepositCommand extends Command {
+
+    public DepositCommand(BigDecimal amount, UUID accountId) {
+        super(accountId, amount);
+    }
+}

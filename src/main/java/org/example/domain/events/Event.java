@@ -19,7 +19,7 @@ public abstract class  Event {
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof Event event)) return false;
-        return Objects.equals(getAccountId(), event.getAccountId());
+        return Objects.equals(getAccountId(), event.getAccountId()) && Objects.equals(getAmount(), event.getAmount()) && Objects.equals(getTimestamp(), event.getTimestamp());
     }
 
     @Override

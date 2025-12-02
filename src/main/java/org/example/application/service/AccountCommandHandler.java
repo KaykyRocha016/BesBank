@@ -23,18 +23,11 @@ public class AccountCommandHandler {
     public void handle(DepositCommand command) {
         process(
                 command,
-                command.accountId(),
+                command.getAccountId(),
                 aggregate -> aggregate.handle(command) // Função que executa a lógica específica do comando
         );
     }
 
-    public void handle(WithdrawCommand command) {
-        process(
-                command,
-                command.accountId(),
-                aggregate -> aggregate.handle(command) // Função que executa a lógica específica do comando
-        );
-    }
 
     // 1. Loga o novo estado
     private <TCommand> void process(
