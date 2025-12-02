@@ -1,5 +1,7 @@
 package org.example.infrastructure;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import org.example.application.service.IEventPublisher;
 import org.example.domain.aggregate.AccountAggregate;
 import org.example.domain.events.Event;
 
@@ -10,31 +12,42 @@ import java.util.Map;
 import java.util.UUID;
 
 public class EventStore implements IEventStore {
-    // aqui ta servindo para simular o banco de dados de Event Store
-    // (chave: ID da conta, valor: stream de eventos)
     private final Map<UUID, List<Event>> eventStreams = new HashMap<>();
+    private final IEventPublisher eventPublisher;
 
+    public EventStore(IEventPublisher eventPublisher) {
+        this.eventPublisher = eventPublisher;
+    }
+
+    @Override
     public AccountAggregate load(UUID accountId) {
         AccountAggregate aggregate = new AccountAggregate(accountId);
         var history = eventStreams.getOrDefault(accountId, new ArrayList<>());
-
-        // reconstrói o estado aplicando todos os eventos
         history.forEach(aggregate::apply);
-
         System.out.println("  -> Agregado reconstruído. Eventos aplicados: " + history.size());
         return aggregate;
     }
 
-    public void save(UUID accountId, List<Event> events) {
+    @Override
+    public void save(UUID accountId, List<Event> events) throws InternalError {
+        // 1. Persiste no Event Store
         eventStreams.computeIfAbsent(accountId, k -> new ArrayList<>()).addAll(events);
         System.out.println("  -> Eventos persistidos no Event Store: " + events.size());
 
-        // se fosse um trem de verddade
-        // em um sistema real, aqui o Event Publisher publicaria no Broker (Kafka)
+        // 2. Publica cada evento no Kafka
+
+        events.forEach(event -> {
+            try {
+                eventPublisher.publish(event);
+            } catch (JsonProcessingException e) {
+                throw new InternalError(e);
+            }
+        });
+
     }
 
+    @Override
     public List<Event> getAllEvents() {
-        // retorna todos os eventos em ordem de ocorrência (simulação simplificada)
         List<Event> all = new ArrayList<>();
         eventStreams.values().forEach(all::addAll);
         return all;
