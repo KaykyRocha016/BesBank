@@ -1,5 +1,6 @@
 package org.example.readModel;
 
+import org.example.domain.events.Event;
 import org.example.domain.events.MoneyDepositedEvent;
 import org.example.domain.events.withdrewMoneyEvent;
 
@@ -14,17 +15,15 @@ public class BalanceProjector {
     // simula o Read DB (armazenamento otimizado para leitura)
     private final Map<UUID, BigDecimal> readDatabase = new HashMap<>();
 
-    public void project(Object event) {
+    public void project(Event event) {
         System.out.println("9. Processando Projeção (Evento): " + event.getClass().getSimpleName());
-
+        var currentBalance = readDatabase.getOrDefault(event.getAccountId(),BigDecimal.ZERO);
         if (event instanceof MoneyDepositedEvent e) {
-            BigDecimal currentBalance = readDatabase.getOrDefault(e.accountId(), BigDecimal.ZERO);
-            BigDecimal newBalance = currentBalance.add(e.amount());
-            readDatabase.put(e.accountId(), newBalance);
+            BigDecimal newBalance = currentBalance.add(e.getAmount());
+            readDatabase.put(e.getAccountId(), newBalance);
         } else if (event instanceof withdrewMoneyEvent e) {
-            BigDecimal currentBalance = readDatabase.getOrDefault(e.accountId(), BigDecimal.ZERO);
-            BigDecimal newBalance = currentBalance.subtract(e.amount());
-            readDatabase.put(e.accountId(), newBalance);
+            BigDecimal newBalance = currentBalance.subtract(e.getAmount());
+            readDatabase.put(e.getAccountId(), newBalance);
         }
 
         // 10. salva o Estado Atual (Update Saldo no Read DB)
@@ -39,9 +38,7 @@ public class BalanceProjector {
         return new AccountBalanceProjection(accountId, balance);
     }
 
-    private UUID getAccountId(Object event) {
-        if (event instanceof MoneyDepositedEvent e) return e.accountId();
-        if (event instanceof withdrewMoneyEvent e) return e.accountId();
-        return null;
+    private UUID getAccountId(Event event) {
+        return event.getAccountId();
     }
 }

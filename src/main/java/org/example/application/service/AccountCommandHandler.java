@@ -5,6 +5,7 @@ import org.example.domain.commands.DepositCommand;
 import org.example.domain.commands.WithdrawCommand;
 import org.example.domain.events.Event;
 import org.example.infrastructure.EventStore;
+import org.example.infrastructure.IEventStore;
 
 import java.util.List;
 import java.util.UUID;
@@ -13,7 +14,7 @@ import java.util.function.Function;
 // o Command Handler orquestra o fluxo de comando
 public class AccountCommandHandler {
 
-    private final EventStore eventStore;
+    private final IEventStore eventStore;
 
     public AccountCommandHandler(EventStore eventStore) {
         this.eventStore = eventStore;
