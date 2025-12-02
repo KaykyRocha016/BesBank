@@ -1,13 +1,12 @@
 package org.example.domain.aggregate;
 
-import org.example.domain.commands.DepositarDinheiroCommand;
-import org.example.domain.commands.SacarDinheiroCommand;
-import org.example.domain.events.DinheiroDepositadoEvent;
-import org.example.domain.events.DinheiroSacadoEvent;
+import org.example.domain.commands.DepositCommand;
+import org.example.domain.commands.WithdrawCommand;
+import org.example.domain.events.MoneyDepositedEvent;
+import org.example.domain.events.withdrewMoneyEvent;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,22 +20,22 @@ public class AccountAggregate {
 
     // metodo para reconstruir o estado a partir dos eventos (Event Sourcing)
     public void apply(Object event) {
-        if (event instanceof DinheiroDepositadoEvent e) {
+        if (event instanceof MoneyDepositedEvent e) {
             this.balance = this.balance.add(e.amount());
-        } else if (event instanceof DinheiroSacadoEvent e) {
+        } else if (event instanceof withdrewMoneyEvent e) {
             this.balance = this.balance.subtract(e.amount());
         }
     }
 
     // lógica para lidar com o comando de Depósito
-    public List<Object> handle(DepositarDinheiroCommand command) {
+    public List<Object> handle(DepositCommand command) {
         //algum dos amigoões adicionar mais alguma lógica aqui tipo pra negativo
         if (command.amount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("O valor do depósito deve ser positivo.");
         }
 
         // gera o evento
-        DinheiroDepositadoEvent event = new DinheiroDepositadoEvent(
+        MoneyDepositedEvent event = new MoneyDepositedEvent(
                 command.accountId(),
                 command.amount(),
                 Instant.now());
@@ -48,7 +47,7 @@ public class AccountAggregate {
     }
 
     // lógica para lidar com o comando de Saque
-    public List<Object> handle(SacarDinheiroCommand command) {
+    public List<Object> handle(WithdrawCommand command) {
         // Validação de negócio: Não pode sacar mais do que o saldo
         //algum dos amigoões adicionar mais alguma lógica aqui tipo pra negativo e coisas q achar necessario pls
         if (command.amount().compareTo(balance) > 0) {
@@ -56,7 +55,7 @@ public class AccountAggregate {
         }
 
         // gera o evento
-        DinheiroSacadoEvent event = new DinheiroSacadoEvent(
+        withdrewMoneyEvent event = new withdrewMoneyEvent(
                 command.accountId(),
                 command.amount(),
                 Instant.now());

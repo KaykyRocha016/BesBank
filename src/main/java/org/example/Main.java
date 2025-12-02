@@ -1,8 +1,8 @@
 package org.example;
 
 import org.example.application.service.AccountCommandHandler;
-import org.example.domain.commands.DepositarDinheiroCommand;
-import org.example.domain.commands.SacarDinheiroCommand;
+import org.example.domain.commands.DepositCommand;
+import org.example.domain.commands.WithdrawCommand;
 import org.example.infrastructure.EventStore;
 import org.example.readModel.AccountBalanceProjection;
 import org.example.readModel.BalanceProjector;
@@ -43,7 +43,7 @@ public class Main {
         // --- FLUXO DE ESCRITA (Depósito) ---
         System.out.println("\n--- 1. ENVIANDO COMANDO DE DEPÓSITO ---");
         // 1. Usuário Envia Comando
-        DepositarDinheiroCommand deposito = new DepositarDinheiroCommand(contaId, new BigDecimal("100.00"));
+        DepositCommand deposito = new DepositCommand(contaId, new BigDecimal("100.00"));
         commandHandler.handle(deposito); // Dispara fluxo 2-7
 
         // --- FLUXO DE LEITURA (Projeção do Saldo) ---
@@ -58,7 +58,7 @@ public class Main {
 
         // --- FLUXO DE ESCRITA (Saque) ---
         System.out.println("\n--- 3. ENVIANDO COMANDO DE SAQUE ---");
-        SacarDinheiroCommand saque = new SacarDinheiroCommand(contaId, new BigDecimal("30.00"));
+        WithdrawCommand saque = new WithdrawCommand(contaId, new BigDecimal("30.00"));
         commandHandler.handle(saque);
 
         // --- FLUXO DE LEITURA (Nova Projeção do Saldo) ---

@@ -1,8 +1,8 @@
 package org.example.application.service;
 
 import org.example.domain.aggregate.AccountAggregate;
-import org.example.domain.commands.DepositarDinheiroCommand;
-import org.example.domain.commands.SacarDinheiroCommand;
+import org.example.domain.commands.DepositCommand;
+import org.example.domain.commands.WithdrawCommand;
 import org.example.infrastructure.EventStore;
 
 import java.util.List;
@@ -18,7 +18,7 @@ public class AccountCommandHandler {
         this.eventStore = eventStore;
     }
 
-    public void handle(DepositarDinheiroCommand command) {
+    public void handle(DepositCommand command) {
         process(
                 command,
                 command.accountId(),
@@ -26,7 +26,7 @@ public class AccountCommandHandler {
         );
     }
 
-    public void handle(SacarDinheiroCommand command) {
+    public void handle(WithdrawCommand command) {
         process(
                 command,
                 command.accountId(),

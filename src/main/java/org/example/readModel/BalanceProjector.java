@@ -1,7 +1,7 @@
 package org.example.readModel;
 
-import org.example.domain.events.DinheiroDepositadoEvent;
-import org.example.domain.events.DinheiroSacadoEvent;
+import org.example.domain.events.MoneyDepositedEvent;
+import org.example.domain.events.withdrewMoneyEvent;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -17,11 +17,11 @@ public class BalanceProjector {
     public void project(Object event) {
         System.out.println("9. Processando Projeção (Evento): " + event.getClass().getSimpleName());
 
-        if (event instanceof DinheiroDepositadoEvent e) {
+        if (event instanceof MoneyDepositedEvent e) {
             BigDecimal currentBalance = readDatabase.getOrDefault(e.accountId(), BigDecimal.ZERO);
             BigDecimal newBalance = currentBalance.add(e.amount());
             readDatabase.put(e.accountId(), newBalance);
-        } else if (event instanceof DinheiroSacadoEvent e) {
+        } else if (event instanceof withdrewMoneyEvent e) {
             BigDecimal currentBalance = readDatabase.getOrDefault(e.accountId(), BigDecimal.ZERO);
             BigDecimal newBalance = currentBalance.subtract(e.amount());
             readDatabase.put(e.accountId(), newBalance);
@@ -40,8 +40,8 @@ public class BalanceProjector {
     }
 
     private UUID getAccountId(Object event) {
-        if (event instanceof DinheiroDepositadoEvent e) return e.accountId();
-        if (event instanceof DinheiroSacadoEvent e) return e.accountId();
+        if (event instanceof MoneyDepositedEvent e) return e.accountId();
+        if (event instanceof withdrewMoneyEvent e) return e.accountId();
         return null;
     }
 }

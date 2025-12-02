@@ -3,7 +3,7 @@ package org.example.domain.commands;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-public record DepositarDinheiroCommand(
+public record WithdrawCommand(
         UUID accountId,
         BigDecimal amount
 ) {}
