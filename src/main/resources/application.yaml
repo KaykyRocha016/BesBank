@@ -20,5 +20,12 @@ app:
       password: password
       driver-class-name: org.postgresql.Driver
 
+kafka:
+  bootstrap-servers: localhost:9092
+  topic:
+    events: account-events
+  consumer:
+    group-id: balance-projector-group
+
 server:
   port: 8080

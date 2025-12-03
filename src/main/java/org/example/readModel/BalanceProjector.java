@@ -1,44 +1,60 @@
 package org.example.readModel;
 
-import org.example.domain.events.Event;
-import org.example.domain.events.MoneyDepositedEvent;
-import org.example.domain.events.WithdrawMoneyEvent;
+import org.example.domain.events.*;
+import org.example.infrastructure.jpa.read.AccountReadEntity;
+import org.example.infrastructure.jpa.read.AccountReadJpaRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
-// o Projector transforma eventos em estado de leitura (Read Model Updater)
+@Service
 public class BalanceProjector {
 
-    // simula o Read DB (armazenamento otimizado para leitura)
-    private final Map<UUID, BigDecimal> readDatabase = new HashMap<>();
+    private final AccountReadJpaRepository readRepository;
 
+    public BalanceProjector(AccountReadJpaRepository readRepository) {
+        this.readRepository = readRepository;
+    }
+
+    @Transactional("readTransactionManager") // se tiver transaction manager separado
     public void project(Event event) {
         System.out.println("9. Processando Projeção (Evento): " + event.getClass().getSimpleName());
-        var currentBalance = readDatabase.getOrDefault(event.getAccountId(),BigDecimal.ZERO);
+
+        AccountReadEntity readEntity = readRepository
+                .findByAccountId(event.getAccountId())
+                .orElseGet(() -> {
+                    AccountReadEntity newEntity = new AccountReadEntity();
+                    newEntity.setAccountId(event.getAccountId());
+                    newEntity.setBalance(BigDecimal.ZERO);
+                    return newEntity;
+                });
+
+        BigDecimal currentBalance = readEntity.getBalance();
+
         if (event instanceof MoneyDepositedEvent e) {
             BigDecimal newBalance = currentBalance.add(e.getAmount());
-            readDatabase.put(e.getAccountId(), newBalance);
+            readEntity.setBalance(newBalance);
+            System.out.println("  -> Depósito aplicado: " + e.getAmount() + " | Novo saldo: " + newBalance);
+
         } else if (event instanceof WithdrawMoneyEvent e) {
             BigDecimal newBalance = currentBalance.subtract(e.getAmount());
-            readDatabase.put(e.getAccountId(), newBalance);
+            readEntity.setBalance(newBalance);
+            System.out.println("  -> Saque aplicado: " + e.getAmount() + " | Novo saldo: " + newBalance);
         }
 
-        // 10. salva o Estado Atual (Update Saldo no Read DB)
-
-        System.out.println("  -> Novo saldo (READ SIDE): " + readDatabase.get(getAccountId(event)));
+        readRepository.save(readEntity);
+        System.out.println("  -> Saldo atualizado no Read DB para conta: " + event.getAccountId());
     }
 
-    // simula a consulta da Read API (GET /saldo)
+
     public AccountBalanceProjection getBalance(UUID accountId) {
-        BigDecimal balance = readDatabase.getOrDefault(accountId, BigDecimal.ZERO);
-        System.out.println("11-12. Consulta Saldo: Saldo no Read DB para " + accountId + ": " + balance);
-        return new AccountBalanceProjection(accountId, balance);
-    }
+        AccountReadEntity entity = readRepository
+                .findByAccountId(accountId)
+                .orElseThrow(() -> new IllegalArgumentException("Conta não encontrada: " + accountId));
 
-    private UUID getAccountId(Event event) {
-        return event.getAccountId();
+        System.out.println("Consulta Saldo: " + accountId + " = " + entity.getBalance());
+        return new AccountBalanceProjection(accountId, entity.getBalance());
     }
 }
