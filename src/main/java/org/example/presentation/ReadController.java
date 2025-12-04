@@ -1,5 +1,6 @@
 package org.example.presentation;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.NonNull;
 import org.example.application.service.AccountQueryService;
 import org.springframework.http.ResponseEntity;
@@ -8,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+@Tag(name = "Consultas de Conta", description = "Operações de leitura (Read Side) - CQRS")
 @RestController
 @RequestMapping("/api/v1/accounts")
 public class ReadController {

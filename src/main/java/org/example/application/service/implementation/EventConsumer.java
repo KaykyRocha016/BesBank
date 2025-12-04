@@ -7,11 +7,11 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.example.application.projection.AccountProjection;
 import org.example.application.service.IEventConsumer;
 import org.example.domain.events.Event;
 import org.example.domain.events.MoneyDepositedEvent;
 import org.example.domain.events.WithdrawMoneyEvent;
-import org.example.readModel.BalanceProjector;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -25,7 +25,7 @@ import java.util.Properties;
 public class EventConsumer implements IEventConsumer {
     private KafkaConsumer<String, String> consumer;
     private final ObjectMapper objectMapper;
-    private final BalanceProjector projector;
+    private final AccountProjection projection; // ✅ Mudou de BalanceProjector
     private volatile boolean running = false;
     private Thread consumerThread;
 
@@ -38,9 +38,8 @@ public class EventConsumer implements IEventConsumer {
     @Value("${kafka.consumer.group-id:balance-projector-group}")
     private String groupId;
 
-    // Spring injeta o BalanceProjector automaticamente
-    public EventConsumer(BalanceProjector projector) {
-        this.projector = projector;
+    public EventConsumer(AccountProjection projection) { // ✅ Mudou
+        this.projection = projection;
         this.objectMapper = new ObjectMapper();
         this.objectMapper.registerModule(new JavaTimeModule());
     }
@@ -48,13 +47,7 @@ public class EventConsumer implements IEventConsumer {
     @PostConstruct
     @Override
     public void startConsuming() {
-        Properties props = new Properties();
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
-        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
+        Properties props = getProperties();
 
         this.consumer = new KafkaConsumer<>(props);
         this.consumer.subscribe(Collections.singletonList(topicName));
@@ -75,7 +68,8 @@ public class EventConsumer implements IEventConsumer {
                 }
             } catch (Exception e) {
                 if (running) {
-                    System.err.println("Erro no consumer: " + e.getMessage());
+                    System.err.println("❌ Erro no consumer: " + e.getMessage());
+                    e.printStackTrace();
                 }
             } finally {
                 consumer.close();
@@ -83,22 +77,28 @@ public class EventConsumer implements IEventConsumer {
         });
 
         consumerThread.start();
-        System.out.println("EventConsumer iniciado, ouvindo tópico: " + topicName);
+        System.out.println("✅ EventConsumer iniciado, ouvindo tópico: " + topicName);
     }
 
     @Override
     public void processEvent(ConsumerRecord<String, String> record) {
         try {
+            System.out.println("📥 [CONSUMER] Recebido! Partition: " + record.partition() + " | Offset: " + record.offset());
+
             String eventType = new String(record.headers().lastHeader("eventType").value());
+            System.out.println("📥 [CONSUMER] Tipo: " + eventType);
+
             Event event = deserializeEvent(record.value(), eventType);
 
             if (event != null) {
-                System.out.println("  -> Evento recebido do Kafka: " + eventType);
-                projector.project(event);
+                System.out.println("📥 [CONSUMER] Chamando projection.handle()...");
+                projection.handle(event); // ✅ Chama AccountProjection
+                System.out.println("✅ [CONSUMER] Projeção concluída!");
             }
 
         } catch (Exception e) {
-            System.err.println("Erro ao processar evento: " + e.getMessage());
+            System.err.println("❌ Erro ao processar evento: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -121,5 +121,16 @@ public class EventConsumer implements IEventConsumer {
             }
         }
         System.out.println("EventConsumer parado");
+    }
+
+    private Properties getProperties() {
+        Properties props = new Properties();
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
+        return props;
     }
 }

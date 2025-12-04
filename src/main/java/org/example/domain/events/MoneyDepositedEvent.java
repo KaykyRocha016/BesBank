@@ -10,4 +10,8 @@ public class MoneyDepositedEvent extends  Event {
     public MoneyDepositedEvent(UUID accountId, BigDecimal amount, Instant timestamp) {
         super(accountId, amount, timestamp);
     }
+
+    public MoneyDepositedEvent() {
+        super();
+    }
 }

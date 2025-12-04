@@ -5,10 +5,12 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
-public abstract class  Event {
+public abstract class Event {
     UUID accountId;
     BigDecimal amount;
     Instant timestamp;
+
+    protected Event() {}
 
     public Event(UUID accountId, BigDecimal amount, Instant timestamp) {
         this.accountId = accountId;

@@ -10,4 +10,8 @@ public class WithdrawMoneyEvent extends Event{
     public WithdrawMoneyEvent(UUID accountId, BigDecimal amount, Instant timestamp) {
         super(accountId, amount, timestamp);
     }
+
+    public WithdrawMoneyEvent() {
+        super();
+    }
 }

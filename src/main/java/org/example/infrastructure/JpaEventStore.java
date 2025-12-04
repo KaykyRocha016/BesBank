@@ -1,6 +1,8 @@
 package org.example.infrastructure;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.example.application.projection.AccountProjection;
+import org.example.application.service.IEventPublisher;
 import org.example.domain.aggregate.AccountAggregate;
 import org.example.domain.events.Event;
 import org.example.domain.events.MoneyDepositedEvent;
@@ -17,15 +19,15 @@ import java.util.UUID;
 @Component
 public class JpaEventStore implements IEventStore {
 
-    private final AccountProjection projection;
     private final AccountEventJpaRepository eventRepository;
+    private final IEventPublisher eventPublisher;
 
     public JpaEventStore(
-            AccountProjection projection,
-            AccountEventJpaRepository eventRepository
+            AccountEventJpaRepository eventRepository,
+            IEventPublisher eventPublisher
     ) {
-        this.projection = projection;
         this.eventRepository = eventRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -53,7 +55,13 @@ public class JpaEventStore implements IEventStore {
             eventRepository.save(entity);
         }
 
-        events.forEach(projection::handle);
+        events.forEach(event -> {
+            try {
+                eventPublisher.publish(event);
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException("Erro ao publicar evento no Kafka", e);
+            }
+        });
     }
 
     @Override
