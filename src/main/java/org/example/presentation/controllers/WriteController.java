@@ -1,4 +1,4 @@
-package org.example.presentation;
+package org.example.presentation.controllers;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.example.application.service.AccountCommandHandler;
