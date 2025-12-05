@@ -20,7 +20,7 @@ A conformidade será garantida por testes no ArchUnit que verificarão as depend
 # 2. Adoção do Padrão CQRS (Command Query Responsibility Segregation)
 ## Status: Aceita
 ### Contexto
-O sistema bancário BesBank requer operações de escrita (depósitos, saques) e leitura (consulta de saldo) com características distintas. As operações de escrita demandam validações complexas e consistência forte, enquanto as consultas necessitam de alta performance e disponibilidade.
+O sistema bancário BesBank requer operações de escrita (depósitos, saques) e leitura (consulta de saldo) com características distintas. As operações de escrita demandam validações complexas e consistência forte, enquanto as consultas necessitam de alta desempenho e disponibilidade.
 
 ### Decisão
 Adotaremos o padrão CQRS separando completamente as responsabilidades de comando (escrita) e consulta (leitura).
