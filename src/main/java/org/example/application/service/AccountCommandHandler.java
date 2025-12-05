@@ -41,12 +41,8 @@ public class AccountCommandHandler {
             UUID accountId,
             Function<AccountAggregate, List<Event>> handler
     ) {
-        System.out.println("📥 Despachando Comando: " + command.getClass().getSimpleName());
-
         AccountAggregate aggregate = eventStore.load(accountId);
         List<Event> newEvents = handler.apply(aggregate);
         eventStore.save(accountId, newEvents);
-
-        System.out.println("✅ Novo saldo (WRITE SIDE): " + aggregate.getBalance());
     }
 }

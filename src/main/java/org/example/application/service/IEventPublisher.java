@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import org.example.domain.events.Event;
 
 public interface IEventPublisher {
-    public void publish(Event publish) throws JsonProcessingException;
-    public void close();
+    void publish(Event publish) throws JsonProcessingException;
+    void close();
 
 }

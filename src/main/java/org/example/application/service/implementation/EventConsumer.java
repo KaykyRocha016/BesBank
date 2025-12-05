@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+
 import java.time.Duration;
 import java.util.Collections;
 import java.util.Properties;
@@ -25,7 +26,7 @@ import java.util.Properties;
 public class EventConsumer implements IEventConsumer {
     private KafkaConsumer<String, String> consumer;
     private final ObjectMapper objectMapper;
-    private final AccountProjection projection; // ✅ Mudou de BalanceProjector
+    private final AccountProjection projection;
     private volatile boolean running = false;
     private Thread consumerThread;
 
@@ -38,7 +39,7 @@ public class EventConsumer implements IEventConsumer {
     @Value("${kafka.consumer.group-id:balance-projector-group}")
     private String groupId;
 
-    public EventConsumer(AccountProjection projection) { // ✅ Mudou
+    public EventConsumer(AccountProjection projection) {
         this.projection = projection;
         this.objectMapper = new ObjectMapper();
         this.objectMapper.registerModule(new JavaTimeModule());
@@ -68,7 +69,6 @@ public class EventConsumer implements IEventConsumer {
                 }
             } catch (Exception e) {
                 if (running) {
-                    System.err.println("❌ Erro no consumer: " + e.getMessage());
                     e.printStackTrace();
                 }
             } finally {
@@ -77,28 +77,22 @@ public class EventConsumer implements IEventConsumer {
         });
 
         consumerThread.start();
-        System.out.println("✅ EventConsumer iniciado, ouvindo tópico: " + topicName);
     }
 
     @Override
     public void processEvent(ConsumerRecord<String, String> record) {
         try {
-            System.out.println("📥 [CONSUMER] Recebido! Partition: " + record.partition() + " | Offset: " + record.offset());
-
             String eventType = new String(record.headers().lastHeader("eventType").value());
-            System.out.println("📥 [CONSUMER] Tipo: " + eventType);
 
             Event event = deserializeEvent(record.value(), eventType);
 
             if (event != null) {
-                System.out.println("📥 [CONSUMER] Chamando projection.handle()...");
                 projection.handle(event); // ✅ Chama AccountProjection
-                System.out.println("✅ [CONSUMER] Projeção concluída!");
             }
 
         } catch (Exception e) {
-            System.err.println("❌ Erro ao processar evento: " + e.getMessage());
-            e.printStackTrace();
+            System.out.println(e.getMessage());
+            ;
         }
     }
 

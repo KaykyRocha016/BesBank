@@ -43,7 +43,6 @@ public class EventPublisher implements IEventPublisher {
         props.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
 
         this.producer = new KafkaProducer<>(props);
-        System.out.println("EventPublisher inicializado com servidor: " + bootstrapServers);
     }
 
     @Override
@@ -76,7 +75,6 @@ public class EventPublisher implements IEventPublisher {
         if (producer != null) {
             producer.flush();
             producer.close();
-            System.out.println("EventPublisher fechado");
         }
     }
 }

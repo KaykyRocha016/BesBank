@@ -24,17 +24,12 @@ public class EventStore implements IEventStore {
         AccountAggregate aggregate = new AccountAggregate(accountId);
         var history = eventStreams.getOrDefault(accountId, new ArrayList<>());
         history.forEach(aggregate::apply);
-        System.out.println("  -> Agregado reconstruído. Eventos aplicados: " + history.size());
         return aggregate;
     }
 
     @Override
     public void save(UUID accountId, List<Event> events) throws InternalError {
-        // 1. Persiste no Event Store
         eventStreams.computeIfAbsent(accountId, k -> new ArrayList<>()).addAll(events);
-        System.out.println("  -> Eventos persistidos no Event Store: " + events.size());
-
-        // 2. Publica cada evento no Kafka
 
         events.forEach(event -> {
             try {

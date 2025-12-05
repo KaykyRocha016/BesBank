@@ -33,8 +33,7 @@ public class AccountProjection {
         readModel.setVersion(readModel.getVersion() + 1);
 
         readRepository.save(readModel);
-        System.out.println("✅ Projeção atualizada: Depósito de " + event.getAmount()
-                + " | Novo saldo (READ SIDE): " + readModel.getBalance());
+
     }
 
     private void applyWithdraw(WithdrawMoneyEvent event) {
@@ -45,7 +44,5 @@ public class AccountProjection {
         readModel.setVersion(readModel.getVersion() + 1);
 
         readRepository.save(readModel);
-        System.out.println("✅ Projeção atualizada: Saque de " + event.getAmount()
-                + " | Novo saldo (READ SIDE): " + readModel.getBalance());
     }
 }
