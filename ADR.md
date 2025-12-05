@@ -75,3 +75,37 @@ Testes ArchUnit garantindo que ReadController não acessa repositórios de escri
 Convenção de nomenclatura: classes *Command* no write side, *Query* no read side
 
 Separação física: org.example.infrastructure.jpa.write vs org.example.infrastructure.jpa.read
+
+
+# 3. Seleção do Apache Kafka como Message Broker
+## Status: Aceita
+
+### Contexto
+Com a decisão de utilizar **CQRS (ADR 002)**, criou-se a necessidade de sincronizar o banco de dados de escrita (`bank_write`) com o banco de dados de leitura (`bank_read`).
+
+Como as operações de escrita geram eventos de domínio (ex: `AccountCreated`, `MoneyDeposited`), precisamos de um mecanismo de transporte que garanta:
+1. **Entrega garantida:** Nenhum evento financeiro pode ser perdido.
+2. **Ordenação estrita:** O cálculo do saldo depende da ordem exata das transações.
+3. **Persistência de log:** Capacidade de reprocessar eventos caso a projeção de leitura precise ser reconstruída (Replayability).
+
+### Decisão
+Adotaremos o **Apache Kafka** como a plataforma de streaming de eventos distribuídos.
+
+O fluxo de dados será configurado da seguinte forma:
+1. O **Write Side** publicará eventos no tópico `account-events` após a persistência do comando.
+2. O **Read Side** atuará como consumidor através do consumer-group `balance-projector-group`.
+3. O Kafka servirá como a "Single Source of Truth" (Fonte Única da Verdade) temporária para o trânsito de dados entre os modelos.
+
+### Consequências
+#### Positivas:
+* **Capacidade de Replay:** Diferente de filas tradicionais, o Kafka retém as mensagens por um período configurado. Isso permite que, se o banco de leitura (`bank_read`) for corrompido ou precisarmos criar uma nova projeção (ex: relatório de auditoria), podemos reprocessar todos os eventos do início.
+* **Ordenação por Partição:** O Kafka garante a ordem dos eventos dentro de uma partição. Utilizando o ID da conta como chave de partição, garantimos que todas as transações de um mesmo cliente sejam processadas na ordem exata.
+* **Desacoplamento Temporal:** O serviço de leitura pode estar fora do ar para manutenção; quando voltar, ele apenas lê o offset de onde parou, sem perda de dados.
+
+#### Negativas:
+* **Complexidade de Infraestrutura:** Exige gerenciamento de brokers e Zookeeper/KRaft (mitigado pelo uso de containers Docker no ambiente de desenvolvimento).
+* **Consistência Eventual:** Haverá um "lag" (atraso) inevitável entre a confirmação da transação e a atualização do saldo na consulta.
+
+### Conformidade
+A conformidade será garantida através de:
+* **Configuração:** Validação da propriedade `spring.kafka.consumer.group-id` para garantir que projetores façam parte do grupo `balance-projector-group`.
